@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>أيقونات أخبار تريم من الشعار القديم</title>
+  <style>
+    body { font-family: Tahoma, Arial, sans-serif; background: #efeae2; color: #111b21; padding: 20px; text-align: center; }
+    .box { background: #fff; padding: 16px; border-radius: 12px; max-width: 420px; margin: auto; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    button, label { display: inline-block; background: #008069; color: #fff; border: none; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: bold; margin: 6px; cursor: pointer; }
+    input[type="file"] { display: none; }
+    canvas { margin: 12px auto; display: block; border-radius: 20px; max-width: 100%; background: #f0f2f5; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h3>أيقونة أخبار تريم</h3>
+    <label for="logoInput">اختر صورة الشعار القديم</label>
+    <input id="logoInput" type="file" accept="image/*" />
+    <canvas id="preview" width="512" height="512"></canvas>
+    <button onclick="downloadIcon(192, 'icon-192.png')">تحميل icon-192.png</button>
+    <button onclick="downloadIcon(512, 'icon-512.png')">تحميل icon-512.png</button>
+  </div>
+  <script>
+    let loadedImg = null;
+    const preview = document.getElementById('preview');
+
+    function renderToCanvas(canvas, size) {
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, size, size);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, size, size);
+      if (!loadedImg) return;
+
+      const pad = size * 0.08;
+      const box = size - pad * 2;
+      const ratio = Math.min(box / loadedImg.width, box / loadedImg.height);
+      const w = loadedImg.width * ratio;
+      const h = loadedImg.height * ratio;
+      const x = (size - w) / 2;
+      const y = (size - h) / 2;
+      ctx.drawImage(loadedImg, x, y, w, h);
+    }
+
+    document.getElementById('logoInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+          loadedImg = img;
+          renderToCanvas(preview, 512);
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function downloadIcon(size, filename) {
+      if (!loadedImg) {
+        alert('اختر صورة الشعار القديم أولاً');
+        return;
+      }
+      const temp = document.createElement('canvas');
+      temp.width = size;
+      temp.height = size;
+      renderToCanvas(temp, size);
+      const a = document.createElement('a');
+      a.download = filename;
+      a.href = temp.toDataURL('image/png');
+      a.click();
+    }
+  </script>
+</body>
+</html>
+
