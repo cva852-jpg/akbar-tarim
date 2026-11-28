@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#008069" />
+  <title>WhatsApp — أخبار تريم</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <style>
+    * { box-sizing: border-box; font-family: Tahoma, Arial, sans-serif; }
+    body { margin: 0; background: #ffffff; color: #111b21; padding-bottom: 78px; }
+
+    /* الشريط العلوي */
+    .top-bar { background: #ffffff; padding: 12px 16px 6px; display: flex; align-items: center; justify-content: space-between; gap: 8px; position: sticky; top: 0; z-index: 20; }
+    .brand-wrap { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .logo-circle { width: 38px; height: 38px; border-radius: 50%; overflow: hidden; border: 1px solid #e9edef; flex-shrink: 0; }
+    .logo-circle img { width: 100%; height: 100%; object-fit: cover; }
+    .app-name { font-size: 19px; font-weight: bold; color: #008069; line-height: 1.2; }
+    .user-line { font-size: 11px; color: #54656f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 190px; }
+    .top-btns { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+    .chip-btn { background: #f0f2f5; color: #111b21; border: none; border-radius: 999px; padding: 6px 10px; font-size: 11px; font-weight: bold; cursor: pointer; }
+    .chip-btn.primary { background: #d9fdd3; color: #005c4b; }
+
+    /* شريط البحث */
+    .search-wrap { padding: 6px 16px 8px; background: #ffffff; position: sticky; top: 58px; z-index: 19; }
+    .search-box { background: #f0f2f5; border-radius: 999px; padding: 8px 14px; display: flex; align-items: center; gap: 8px; }
+    .search-box input { width: 100%; border: none; background: transparent; font-size: 14px; color: #111b21; outline: none; }
+
+    /* الفلاتر الأفقية */
+    .filters-bar { display: flex; gap: 8px; padding: 4px 16px 10px; overflow-x: auto; background: #ffffff; border-bottom: 1px solid #f0f2f5; position: sticky; top: 104px; z-index: 18; }
+    .filter-pill { border: 1px solid #e9edef; background: #f0f2f5; color: #54656f; padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: bold; cursor: pointer; white-space: nowrap; }
+    .filter-pill.active { background: #d9fdd3; color: #005c4b; border-color: #b7f0b1; }
+
+    /* منطقة المحتوى */
+    .content-area { max-width: 780px; margin: auto; padding: 10px 14px; }
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* قوائم الدردشات والأرقام */
+    .sub-bar { display: flex; gap: 8px; margin-bottom: 10px; }
+    .sub-btn { flex: 1; border: 1px solid #e9edef; background: #f0f2f5; color: #111b21; padding: 8px; border-radius: 10px; font-size: 12px; font-weight: bold; cursor: pointer; }
+    .sub-btn.active { background: #008069; color: #fff; border-color: #008069; }
+
+    .chat-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; max-height: 210px; overflow-y: auto; }
+    .chat-row { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 14px; cursor: pointer; border: 1px solid #f0f2f5; background: #ffffff; }
+    .chat-row.selected { background: #f0f9f4; border-color: #b7f0b1; }
+    .chat-ava { width: 42px; height: 42px; border-radius: 50%; background: #008069; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; flex-shrink: 0; }
+    .chat-info { flex: 1; min-width: 0; }
+    .chat-top { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 2px; }
+    .chat-title { font-size: 14px; font-weight: bold; color: #111b21; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chat-time { font-size: 10px; color: #008069; font-weight: bold; flex-shrink: 0; }
+    .chat-preview { font-size: 12px; color: #54656f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .room-box { background: #efeae2; border-radius: 16px; padding: 12px; min-height: 250px; max-height: 44vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+    .room-status { text-align: center; font-size: 11px; color: #54656f; background: rgba(255,255,255,0.88); padding: 4px 10px; border-radius: 999px; align-self: center; margin-bottom: 4px; }
+    .msg { max-width: 84%; padding: 8px 12px; border-radius: 12px; font-size: 14px; line-height: 1.5; box-shadow: 0 1px 1px rgba(0,0,0,0.08); word-wrap: break-word; }
+    .msg.mine { background: #d9fdd3; align-self: flex-start; border-top-right-radius: 4px; }
+    .msg.other { background: #ffffff; align-self: flex-end; border-top-left-radius: 4px; }
+    .meta { font-size: 11px; color: #008069; font-weight: bold; margin-bottom: 3px; }
+    .msg-foot { font-size: 10px; color: #667781; text-align: left; margin-top: 3px; }
+
+    .chat-composer { display: flex; gap: 8px; margin-top: 10px; background: #f0f2f5; padding: 7px 10px; border-radius: 24px; }
+    .chat-composer input { flex: 1; border: none; background: transparent; padding: 6px 8px; font-size: 14px; outline: none; }
+    .chat-composer button { background: #008069; color: #fff; border: none; border-radius: 20px; padding: 8px 16px; font-weight: bold; cursor: pointer; }
+
+    /* بطاقات الأخبار والبيع والدليل */
+    .sec-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+    .sec-header h2 { margin: 0; font-size: 17px; color: #111b21; }
+    .add-btn { background: #008069; color: #fff; border: none; border-radius: 10px; padding: 8px 12px; font-size: 12px; font-weight: bold; cursor: pointer; }
+
+    .card { background: #ffffff; border: 1px solid #e9edef; border-radius: 14px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+    .card-tag { display: inline-block; background: #e7ffdb; color: #005c4b; font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 999px; margin-bottom: 6px; }
+    .card h3 { margin: 0 0 6px; font-size: 15px; color: #111b21; }
+    .card p { margin: 0 0 8px; font-size: 13px; color: #54656f; line-height: 1.6; }
+    .card-meta { font-size: 11px; color: #667781; display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .action-link { background: #f0f2f5; color: #008069; border: none; border-radius: 8px; padding: 6px 10px; font-size: 12px; font-weight: bold; cursor: pointer; }
+
+    /* الشريط السفلي */
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 64px; background: #ffffff; border-top: 1px solid #e9edef; display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; padding: 4px 8px; z-index: 25; }
+    .nav-item { border: none; background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #54656f; font-size: 11px; font-weight: bold; cursor: pointer; padding: 4px; border-radius: 14px; }
+    .nav-item .nav-icon { padding: 3px 14px; border-radius: 999px; font-size: 15px; }
+    .nav-item.active { color: #111b21; }
+    .nav-item.active .nav-icon { background: #d9fdd3; color: #005c4b; }
+
+    /* النوافذ المنبثقة */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(17,27,33,0.65); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 50; }
+    .modal-backdrop.open { display: flex; }
+    .modal-box { background: #fff; width: 100%; max-width: 420px; border-radius: 16px; padding: 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); max-height: 88vh; overflow-y: auto; }
+    .modal-box h2 { margin: 0 0 6px; font-size: 18px; color: #008069; }
+    .modal-box p { margin: 0 0 12px; font-size: 13px; color: #54656f; line-height: 1.5; }
+    .field { margin-bottom: 12px; }
+    .field label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #3b4a54; }
+    .phone-row { display: flex; gap: 8px; direction: ltr; }
+    .code-prefix { background: #f0f2f5; border: 1px solid #d1d7db; border-radius: 10px; padding: 10px 12px; font-weight: bold; color: #111b21; }
+    .field input, .field textarea, .field select { width: 100%; border: 1px solid #d1d7db; border-radius: 10px; padding: 10px 12px; font-size: 14px; outline: none; font-family: inherit; }
+    .sms-toast { background: #e7ffdb; border: 1px solid #a3e694; color: #0b532c; padding: 10px 12px; border-radius: 10px; font-size: 13px; margin-bottom: 12px; display: none; }
+    .sms-toast.show { display: block; }
+    .btn-primary { width: 100%; background: #008069; color: #fff; border: none; border-radius: 10px; padding: 11px; font-size: 14px; font-weight: bold; cursor: pointer; margin-bottom: 8px; }
+    .btn-secondary { width: 100%; background: #f0f2f5; color: #111b21; border: none; border-radius: 10px; padding: 9px; font-size: 13px; font-weight: bold; cursor: pointer; }
+    .err-msg { color: #c62828; font-size: 12px; margin-bottom: 10px; min-height: 16px; }
+  </style>
+</head>
+<body>
+  <!-- الشريط العلوي -->
+  <header class="top-bar">
+    <div class="brand-wrap">
+      <div class="logo-circle"><img src="icon-192.png" alt="أخبار تريم" /></div>
+      <div>
+        <div class="app-name">WhatsApp</div>
+        <div class="user-line" id="userSubtitle">أخبار تريم • غير مسجل</div>
+      </div>
+    </div>
+    <div class="top-btns">
+      <button class="chip-btn primary" id="accountBtn">تسجيل الرقم</button>
+      <button class="chip-btn" id="syncBadge">متصل</button>
+      <button class="chip-btn" id="installBtn" style="display:none;">تثبيت</button>
+    </div>
+  </header>
+
+  <!-- شريط البحث -->
+  <div class="search-wrap">
+    <div class="search-box">
+      <span>🔍</span>
+      <input id="searchInput" type="search" placeholder="بحث في الرسائل، الأرقام، الأخبار، البيع، الدليل..." />
+    </div>
+  </div>
+
+  <!-- فلاتر التصفية السريعة -->
+  <div class="filters-bar">
+    <button class="filter-pill active" data-tab-jump="chat">الدردشات</button>
+    <button class="filter-pill" data-tab-jump="news">الأخبار</button>
+    <button class="filter-pill" data-tab-jump="market">البيع</button>
+    <button class="filter-pill" data-tab-jump="guide">الدليل والخريطة</button>
+  </div>
+
+  <!-- منطقة المحتوى -->
+  <main class="content-area">
+    <!-- 1. قسم الدردشات والأرقام المسجلة -->
+    <section id="chat" class="section active">
+      <div class="sub-bar">
+        <button class="sub-btn active" id="subChatsBtn">المحادثات</button>
+        <button class="sub-btn" id="subContactsBtn">الأرقام المسجلة (<span id="contactsCount">0</span>)</button>
+      </div>
+
+      <!-- قائمة المحادثات النشطة والغرف -->
+      <div class="chat-list" id="threadsList"></div>
+
+      <!-- قائمة الأرقام المسجلة في التطبيق -->
+      <div class="chat-list" id="contactsList" style="display:none;"></div>
+
+      <!-- صندوق الرسائل -->
+      <div class="room-box" id="messagesBox"></div>
+
+      <div class="chat-composer">
+        <input id="msgInput" type="text" placeholder="اكتب رسالتك هنا..." />
+        <button id="sendBtn">إرسال</button>
+      </div>
+    </section>
+
+    <!-- 2. قسم الأخبار -->
+    <section id="news" class="section">
+      <div class="sec-header">
+        <h2>أخبار تريم</h2>
+        <button class="add-btn" id="openNewsModalBtn">+ نشر خبر</button>
+      </div>
+      <div id="newsFeed"></div>
+    </section>
+
+    <!-- 3. قسم البيع والخدمات -->
+    <section id="market" class="section">
+      <div class="sec-header">
+        <h2>سوق البيع والخدمات</h2>
+        <button class="add-btn" id="openMarketModalBtn">+ إضافة إعلان</button>
+      </div>
+      <div id="marketFeed"></div>
+    </section>
+
+    <!-- 4. قسم الدليل والخريطة -->
+    <section id="guide" class="section">
+      <div class="sec-header">
+        <h2>دليل ومواقع تريم</h2>
+        <button class="add-btn" id="openGuideModalBtn">+ إضافة موقع/خدمة</button>
+      </div>
+      <div id="guideFeed"></div>
+    </section>
+  </main>
+
+  <!-- الشريط السفلي -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-target="chat">
+      <span class="nav-icon">💬</span>
+      <span>الدردشات</span>
+    </button>
+    <button class="nav-item" data-target="news">
+      <span class="nav-icon">📰</span>
+      <span>الأخبار</span>
+    </button>
+    <button class="nav-item" data-target="market">
+      <span class="nav-icon">🛍️</span>
+      <span>البيع</span>
+    </button>
+    <button class="nav-item" data-target="guide">
+      <span class="nav-icon">🗺️</span>
+      <span>الدليل</span>
+    </button>
+  </nav>
+
+  <!-- نافذة تسجيل الرقم وكود التحقق -->
+  <div class="modal-backdrop" id="authModal">
+    <div class="modal-box">
+      <div id="stepPhone">
+        <h2>تسجيل الدخول برقم الهاتف</h2>
+        <p>سجّل اسمك ورقمك لتظهر في قائمة الأرقام وتتمكن من مراسلة أي شخص أو الإدارة.</p>
+        <div class="field">
+          <label for="nameInput">الاسم</label>
+          <input id="nameInput" type="text" placeholder="مثال: محمد باحريش" />
+        </div>
+        <div class="field">
+          <label for="phoneInput">رقم الجوال</label>
+          <div class="phone-row">
+            <span class="code-prefix">+967</span>
+            <input id="phoneInput" type="tel" inputmode="numeric" placeholder="77XXXXXXX" />
+          </div>
+        </div>
+        <div class="err-msg" id="phoneErr"></div>
+        <button class="btn-primary" id="sendCodeBtn">إرسال كود التحقق</button>
+        <button class="btn-secondary" id="closeAuthBtn">إغلاق</button>
+      </div>
+
+      <div id="stepCode" style="display:none;">
+        <h2>تأكيد رمز التحقق</h2>
+        <p id="codeDesc">تم إرسال رمز تحقق مكون من 6 أرقام.</p>
+        <div class="sms-toast" id="smsToast"></div>
+        <div class="field">
+          <label for="codeInput">أدخل الرمز (6 أرقام)</label>
+          <input id="codeInput" type="text" inputmode="numeric" maxlength="6" placeholder="000000" />
+        </div>
+        <div class="err-msg" id="codeErr"></div>
+        <button class="btn-primary" id="verifyBtn">تأكيد وتفعيل الحساب</button>
+        <button class="btn-secondary" id="backPhoneBtn">تغيير الرقم أو إعادة الإرسال</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- نافذة إضافة عنصر جديد (خبر / بيع / دليل) -->
+  <div class="modal-backdrop" id="postModal">
+    <div class="modal-box">
+      <h2 id="postModalTitle">إضافة جديد</h2>
+      <div class="field">
+        <label for="postTitle">العنوان</label>
+        <input id="postTitle" type="text" placeholder="اكتب عنواناً واضحاً..." />
+      </div>
+      <div class="field" id="extraFieldWrap" style="display:none;">
+        <label id="extraFieldLabel" for="postExtra">تفصيل إضافي</label>
+        <input id="postExtra" type="text" placeholder="" />
+      </div>
+      <div class="field">
+        <label for="postBody">التفاصيل</label>
+        <textarea id="postBody" rows="3" placeholder="اكتب التفاصيل هنا..."></textarea>
+      </div>
+      <div class="err-msg" id="postErr"></div>
+      <button class="btn-primary" id="savePostBtn">نشر الآن</button>
+      <button class="btn-secondary" id="closePostBtn">إلغاء</button>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_USER = 'tarim_wa_user_v2';
+    const STORAGE_MSGS = 'tarim_wa_msgs_v3';
+    const STORAGE_CONTACTS = 'tarim_wa_contacts_v1';
+    const STORAGE_NEWS = 'tarim_wa_news_v1';
+    const STORAGE_MARKET = 'tarim_wa_market_v1';
+    const STORAGE_GUIDE = 'tarim_wa_guide_v1';
+
+    const TOPIC_CHAT_PREFIX = 'tarim_wa_2026_room_';
+    const TOPIC_PRESENCE = 'tarim_wa_2026_presence';
+    const TOPIC_NEWS = 'tarim_wa_2026_news';
+    const TOPIC_MARKET = 'tarim_wa_2026_market';
+    const TOPIC_GUIDE = 'tarim_wa_2026_guide';
+
+    let activeThread = { id: 'public', title: 'مجلس أخبار تريم العام', subtitle: 'محادثة عامة لكل المستخدمين' };
+    let activePostType = 'news';
+    let generatedCode = '';
+    let pendingUser = null;
+    let currentSource = null;
+
+    function loadJson(key, fallback) {
+      try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
+      catch { return fallback; }
+    }
+    function saveJson(key, val) {
+      localStorage.setItem(key, JSON.stringify(val));
+    }
+    function escapeHtml(s) {
+      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function getSavedUser() {
+      return loadJson(STORAGE_USER, null);
+    }
+
+    function getDmRoomId(p1, p2) {
+      const sorted = [String(p1).replace(/\D/g, ''), String(p2).replace(/\D/g, '')].sort();
+      return 'dm_' + sorted.join('_');
+    }
+
+    // تحديث واجهة المستخدم
+    function refreshUserUI() {
+      const u = getSavedUser();
+      const sub = document.getElementById('userSubtitle');
+      const btn = document.getElementById('accountBtn');
+      if (u && u.phone) {
+        sub.textContent = `${u.name} • +967${u.phone}`;
+        btn.textContent = 'حسابي';
+      } else {
+        sub.textContent = 'أخبار تريم • غير مسجل';
+        btn.textContent = 'تسجيل الرقم';
+      }
+      renderContacts();
+      renderThreads();
+    }
+
+    // جهات الاتصال والأرقام المسجلة
+    function registerPresence(user) {
+      if (!user || !user.phone) return;
+      const cleanPhone = String(user.phone).replace(/\D/g, '');
+      const contact = {
+        id: 'u_' + cleanPhone,
+        name: user.name || 'مستخدم تريم',
+        phone: cleanPhone,
+        updatedAt: Date.now()
+      };
+      upsertContact(contact);
+      fetch(`https://ntfy.sh/${TOPIC_PRESENCE}`, {
+        method: 'POST',
+        body: JSON.stringify({ type: 'presence', contact })
+      }).catch(() => {});
+    }
+
+    function upsertContact(c) {
+      if (!c || !c.phone) return;
+      const list = loadJson(STORAGE_CONTACTS, []);
+      const idx = list.findIndex(x => x.phone === c.phone);
+      if (idx >= 0) list[idx] = { ...list[idx], ...c };
+      else list.unshift(c);
+      saveJson(STORAGE_CONTACTS, list.slice(0, 80));
+      renderContacts();
+    }
+
+    function openPrivateChatWith(contact) {
+      const me = getSavedUser();
+      if (!me || !me.phone) {
+        openAuthModal();
+        return;
+      }
+      if (contact.phone === me.phone) {
+        activeThread = { id: 'self_' + me.phone, title: 'رسائلي المحفوظة', subtitle: '+967' + me.phone };
+      } else {
+        activeThread = {
+          id: getDmRoomId(me.phone, contact.phone),
+          title: `${contact.name} (+967${contact.phone})`,
+          subtitle: 'محادثة مباشرة بين رقمين'
+        };
+      }
+      document.getElementById('subChatsBtn').click();
+      subscribeToRoom(activeThread.id);
+      renderThreads();
+      renderMessages();
+    }
+
+    function renderContacts() {
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      const all = loadJson(STORAGE_CONTACTS, []);
+      const filtered = q
+        ? all.filter(c => (c.name + ' ' + c.phone).toLowerCase().includes(q))
+        : all;
+
+      document.getElementById('contactsCount').textContent = all.length;
+      const box = document.getElementById('contactsList');
+
+      if (!filtered.length) {
+        box.innerHTML = `<div class="chat-row"><div class="chat-info"><div class="chat-title">لا توجد أرقام مسجلة بعد</div><div class="chat-preview">سجّل رقمك لتظهر في الدليل وتبدأ المراسلة</div></div></div>`;
+        return;
+      }
+
+      box.innerHTML = filtered.map(c => `
+        <div class="chat-row" data-phone="${escapeHtml(c.phone)}">
+          <div class="chat-ava">${escapeHtml((c.name || 'م').slice(0, 2))}</div>
+          <div class="chat-info">
+            <div class="chat-top">
+              <span class="chat-title">${escapeHtml(c.name)}</span>
+              <span class="chat-time">+967${escapeHtml(c.phone)}</span>
+            </div>
+            <div class="chat-preview">اضغط لفتح محادثة مباشرة مع هذا الرقم</div>
+          </div>
+        </div>
+      `).join('');
+
+      box.querySelectorAll('.chat-row[data-phone]').forEach(row => {
+        row.addEventListener('click', () => {
+          const found = all.find(x => x.phone === row.dataset.phone);
+          if (found) openPrivateChatWith(found);
+        });
+      });
+    }
+
+    // المحادثات النشطة والغرف
+    function getKnownThreads() {
+      const me = getSavedUser();
+      const base = [
+        { id: 'public', title: 'مجلس أخبار تريم العام', subtitle: 'محادثة مشتركة لكل من يفتح التطبيق' },
+        { id: 'team', title: 'فريق أخبار تريم', subtitle: 'غرفة الإدارة والمتابعة' }
+      ];
+      if (me && me.phone) {
+        base.push({ id: 'self_' + me.phone, title: 'ملاحظاتي الخاصة', subtitle: 'محفوظة على جهازك' });
+      }
+      const savedThreads = loadJson('tarim_wa_threads_v1', []);
+      const merged = [...base];
+      savedThreads.forEach(st => {
+        if (!merged.some(m => m.id === st.id)) merged.push(st);
+      });
+      if (!merged.some(m => m.id === activeThread.id)) merged.unshift(activeThread);
+      return merged;
+    }
+
+    function rememberThread(th) {
+      const list = loadJson('tarim_wa_threads_v1', []);
+      if (!list.some(x => x.id === th.id)) {
+        list.unshift(th);
+        saveJson('tarim_wa_threads_v1', list.slice(0, 25));
+      }
+    }
+
+    function renderThreads() {
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      const msgsAll = loadJson(STORAGE_MSGS, {});
+      const threads = getKnownThreads().filter(t =>
+        !q || (t.title + ' ' + t.subtitle).toLowerCase().includes(q)
+      );
+
+      const box = document.getElementById('threadsList');
+      box.innerHTML = threads.map(t => {
+        const list = msgsAll[t.id] || [];
+        const last = list[list.length - 1];
+        const preview = last ? `${last.sender}: ${last.text}` : t.subtitle;
+        const selected = t.id === activeThread.id ? 'selected' : '';
+        return `
+          <div class="chat-row ${selected}" data-tid="${escapeHtml(t.id)}">
+            <div class="chat-ava">${escapeHtml(t.title.slice(0, 2))}</div>
+            <div class="chat-info">
+              <div class="chat-top">
+                <span class="chat-title">${escapeHtml(t.title)}</span>
+                <span class="chat-time">${last ? escapeHtml(last.time) : 'نشط'}</span>
+              </div>
+              <div class="chat-preview">${escapeHtml(preview)}</div>
+            </div>
+          </div>`;
+      }).join('');
+
+      box.querySelectorAll('.chat-row[data-tid]').forEach(row => {
+        row.addEventListener('click', () => {
+          const found = getKnownThreads().find(x => x.id === row.dataset.tid);
+          if (!found) return;
+          activeThread = found;
+          subscribeToRoom(activeThread.id);
+          renderThreads();
+          renderMessages();
+        });
+      });
+    }
+
+    function saveMessage(roomId, msg) {
+      const all = loadJson(STORAGE_MSGS, {});
+      if (!all[roomId]) all[roomId] = [];
+      if (all[roomId].some(m => m.id === msg.id)) return false;
+      all[roomId].push(msg);
+      if (all[roomId].length > 150) all[roomId] = all[roomId].slice(-150);
+      saveJson(STORAGE_MSGS, all);
+      return true;
+    }
+
+    function renderMessages() {
+      const me = getSavedUser();
+      const myPhone = me?.phone || '';
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      const all = loadJson(STORAGE_MSGS, {});
+      const list = all[activeThread.id] || [];
+      const filtered = q ? list.filter(m => (m.text + ' ' + m.sender).toLowerCase().includes(q)) : list;
+
+      const box = document.getElementById('messagesBox');
+      let html = `<div class="room-status">${escapeHtml(activeThread.title)} • ${escapeHtml(activeThread.subtitle)}</div>`;
+
+      if (!filtered.length) {
+        html += `<div class="msg other"><div class="meta">WhatsApp — أخبار تريم</div>ابدأ المراسلة الآن؛ ستظهر رسائلك هنا وتصل للطرف الآخر فور اتصاله.</div>`;
+      } else {
+        filtered.forEach(m => {
+          const mine = myPhone && m.senderPhone === myPhone;
+          html += `
+            <div class="msg ${mine ? 'mine' : 'other'}">
+              <div class="meta">${escapeHtml(m.sender)}</div>
+              <div>${escapeHtml(m.text)}</div>
+              <div class="msg-foot">${escapeHtml(m.time)} ${mine ? '✓✓' : ''}</div>
+            </div>`;
+        });
+      }
+      box.innerHTML = html;
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function subscribeToRoom(roomId) {
+      if (currentSource) {
+        try { currentSource.close(); } catch {}
+        currentSource = null;
+      }
+      if (roomId.startsWith('self_')) return;
+
+      const topic = TOPIC_CHAT_PREFIX + roomId.replace(/[^a-zA-Z0-9_-]/g, '_');
+      try {
+        const es = new EventSource(`https://ntfy.sh/${topic}/sse?since=24h`);
+        es.onopen = () => {
+          document.getElementById('syncBadge').textContent = 'متصل مباشر';
+          document.getElementById('syncBadge').classList.add('primary');
+        };
+        es.onmessage = (ev) => {
+          try {
+            const outer = JSON.parse(ev.data);
+            if (!outer.message) return;
+            const parsed = JSON.parse(outer.message);
+            if (parsed.type === 'chat' && parsed.msg && parsed.msg.id) {
+              const added = saveMessage(roomId, parsed.msg);
+              if (added && activeThread.id === roomId) {
+                renderMessages();
+                renderThreads();
+              }
+            }
+          } catch {}
+        };
+        es.onerror = () => {
+          document.getElementById('syncBadge').textContent = 'إعادة ربط...';
+        };
+        currentSource = es;
+      } catch {}
+    }
+
+    function subscribePresence() {
+      try {
+        const es = new EventSource(`https://ntfy.sh/${TOPIC_PRESENCE}/sse?since=72h`);
+        es.onmessage = (ev) => {
+          try {
+            const outer = JSON.parse(ev.data);
+            if (!outer.message) return;
+            const parsed = JSON.parse(outer.message);
+            if (parsed.type === 'presence' && parsed.contact) {
+              upsertContact(parsed.contact);
+            }
+          } catch {}
+        };
+      } catch {}
+    }
+
+    async function sendChatMessage() {
+      const input = document.getElementById('msgInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const me = getSavedUser();
+      if (!me || !me.phone) {
+        openAuthModal();
+        return;
+      }
+
+      rememberThread(activeThread);
+      const now = new Date();
+      const msg = {
+        id: 'm_' + me.phone + '_' + Date.now(),
+        sender: `${me.name} (+967${me.phone})`,
+        senderPhone: me.phone,
+        text,
+        time: now.toLocaleTimeString('ar-YE', { hour: '2-digit', minute: '2-digit' })
+      };
+
+      saveMessage(activeThread.id, msg);
+      input.value = '';
+      renderMessages();
+      renderThreads();
+
+      if (!activeThread.id.startsWith('self_')) {
+        const topic = TOPIC_CHAT_PREFIX + activeThread.id.replace(/[^a-zA-Z0-9_-]/g, '_');
+        fetch(`https://ntfy.sh/${topic}`, {
+          method: 'POST',
+          body: JSON.stringify({ type: 'chat', msg })
+        }).catch(() => {});
+      }
+    }
+
+    document.getElementById('sendBtn').addEventListener('click', sendChatMessage);
+    document.getElementById('msgInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendChatMessage();
+    });
+
+    // التبديل بين المحادثات والأرقام المسجلة
+    document.getElementById('subChatsBtn').addEventListener('click', () => {
+      document.getElementById('subChatsBtn').classList.add('active');
+      document.getElementById('subContactsBtn').classList.remove('active');
+      document.getElementById('threadsList').style.display = 'flex';
+      document.getElementById('contactsList').style.display = 'none';
+    });
+
+    document.getElementById('subContactsBtn').addEventListener('click', () => {
+      document.getElementById('subContactsBtn').classList.add('active');
+      document.getElementById('subChatsBtn').classList.remove('active');
+      document.getElementById('threadsList').style.display = 'none';
+      document.getElementById('contactsList').style.display = 'flex';
+      renderContacts();
+    });
+
+    // الأقسام الإضافية: الأخبار، البيع، الدليل
+    function seedDefaultsIfEmpty() {
+      if (!localStorage.getItem(STORAGE_NEWS)) {
+        saveJson(STORAGE_NEWS, [
+          { id: 'n1', title: 'انطلاق منصة أخبار تريم التفاعلية', extra: 'محلي', body: 'مرحباً بالجميع في منصة التواصل والخدمات لأبناء تريم.', author: 'إدارة أخبار تريم', time: 'اليوم' }
+        ]);
+      }
+      if (!localStorage.getItem(STORAGE_MARKET)) {
+        saveJson(STORAGE_MARKET, [
+          { id: 's1', title: 'عروض وخدمات محلية في تريم', extra: 'حسب الاتفاق', body: 'يمكن لأصحاب المحلات والخدمات إضافة عروضهم هنا والتواصل مباشرة.', author: 'سوق تريم', time: 'اليوم' }
+        ]);
+      }
+      if (!localStorage.getItem(STORAGE_GUIDE)) {
+        saveJson(STORAGE_GUIDE, [
+          { id: 'g1', title: 'أحياء ومواقع مدينة تريم', extra: 'تريم • حضرموت', body: 'دليل الأحياء والمراكز والخدمات المهمة لتسهيل الوصول.', author: 'دليل تريم', time: 'محدّث' }
+        ]);
+      }
+    }
+
+    function renderServiceSection(storageKey, containerId, mode) {
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      const items = loadJson(storageKey, []);
+      const filtered = q
+        ? items.filter(i => (i.title + ' ' + i.extra + ' ' + i.body + ' ' + i.author).toLowerCase().includes(q))
+        : items;
+
+      const box = document.getElementById(containerId);
+      if (!filtered.length) {
+        box.innerHTML = `<div class="card"><p>لا توجد عناصر مطابقة حالياً.</p></div>`;
+        return;
+      }
+
+      box.innerHTML = filtered.map(item => {
+        const tagText = mode === 'market' ? `السعر: ${item.extra || 'تواصل'}` : (item.extra || 'تريم');
+        return `
+          <div class="card">
+            <span class="card-tag">${escapeHtml(tagText)}</span>
+            <h3>${escapeHtml(item.title)}</h3>
+            <p>${escapeHtml(item.body)}</p>
+            <div class="card-meta">
+              <span>بواسطة: ${escapeHtml(item.author || 'عضو')} • ${escapeHtml(item.time || '')}</span>
+              ${item.authorPhone ? `<button class="action-link" data-dm-phone="${escapeHtml(item.authorPhone)}" data-dm-name="${escapeHtml(item.author)}">مراسلة</button>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+
+      box.querySelectorAll('[data-dm-phone]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          switchSection('chat');
+          openPrivateChatWith({ phone: btn.dataset.dmPhone, name: btn.dataset.dmName });
+        });
+      });
+    }
+
+    // نافذة إضافة خبر / بيع / دليل
+    const postModal = document.getElementById('postModal');
+    function openPostModal(type) {
+      activePostType = type;
+      document.getElementById('postErr').textContent = '';
+      document.getElementById('postTitle').value = '';
+      document.getElementById('postExtra').value = '';
+      document.getElementById('postBody').value = '';
+      const extraWrap = document.getElementById('extraFieldWrap');
+      const extraLabel = document.getElementById('extraFieldLabel');
+      const modalTitle = document.getElementById('postModalTitle');
+
+      if (type === 'news') {
+        modalTitle.textContent = 'نشر خبر جديد';
+        extraWrap.style.display = 'block';
+        extraLabel.textContent = 'التصنيف (مثال: اجتماع، فعالية، تنويه)';
+      } else if (type === 'market') {
+        modalTitle.textContent = 'إضافة إعلان بيع أو خدمة';
+        extraWrap.style.display = 'block';
+        extraLabel.textContent = 'السعر أو العرض';
+      } else {
+        modalTitle.textContent = 'إضافة موقع أو خدمة في الدليل';
+        extraWrap.style.display = 'block';
+        extraLabel.textContent = 'الحي أو الموقع في تريم';
+      }
+      postModal.classList.add('open');
+    }
+
+    document.getElementById('openNewsModalBtn').addEventListener('click', () => openPostModal('news'));
+    document.getElementById('openMarketModalBtn').addEventListener('click', () => openPostModal('market'));
+    document.getElementById('openGuideModalBtn').addEventListener('click', () => openPostModal('guide'));
+    document.getElementById('closePostBtn').addEventListener('click', () => postModal.classList.remove('open'));
+
+    document.getElementById('savePostBtn').addEventListener('click', () => {
+      const title = document.getElementById('postTitle').value.trim();
+      const extra = document.getElementById('postExtra').value.trim();
+      const body = document.getElementById('postBody').value.trim();
+      const err = document.getElementById('postErr');
+      if (!title || !body) {
+        err.textContent = 'يرجى كتابة العنوان والتفاصيل.';
+        return;
+      }
+      const me = getSavedUser();
+      const item = {
+        id: 'p_' + Date.now(),
+        title,
+        extra,
+        body,
+        author: me?.name || 'مستخدم تريم',
+        authorPhone: me?.phone || '',
+        time: 'الآن'
+      };
+
+      if (activePostType === 'news') {
+        const arr = loadJson(STORAGE_NEWS, []);
+        arr.unshift(item);
+        saveJson(STORAGE_NEWS, arr);
+        renderServiceSection(STORAGE_NEWS, 'newsFeed', 'news');
+        fetch(`https://ntfy.sh/${TOPIC_NEWS}`, { method: 'POST', body: JSON.stringify(item) }).catch(() => {});
+      } else if (activePostType === 'market') {
+        const arr = loadJson(STORAGE_MARKET, []);
+        arr.unshift(item);
+        saveJson(STORAGE_MARKET, arr);
+        renderServiceSection(STORAGE_MARKET, 'marketFeed', 'market');
+        fetch(`https://ntfy.sh/${TOPIC_MARKET}`, { method: 'POST', body: JSON.stringify(item) }).catch(() => {});
+      } else {
+        const arr = loadJson(STORAGE_GUIDE, []);
+        arr.unshift(item);
+        saveJson(STORAGE_GUIDE, arr);
+        renderServiceSection(STORAGE_GUIDE, 'guideFeed', 'guide');
+        fetch(`https://ntfy.sh/${TOPIC_GUIDE}`, { method: 'POST', body: JSON.stringify(item) }).catch(() => {});
+      }
+      postModal.classList.remove('open');
+    });
+
+    function subscribeServices() {
+      const subs = [
+        { topic: TOPIC_NEWS, key: STORAGE_NEWS, feed: 'newsFeed', mode: 'news' },
+        { topic: TOPIC_MARKET, key: STORAGE_MARKET, feed: 'marketFeed', mode: 'market' },
+        { topic: TOPIC_GUIDE, key: STORAGE_GUIDE, feed: 'guideFeed', mode: 'guide' }
+      ];
+      subs.forEach(s => {
+        try {
+          const es = new EventSource(`https://ntfy.sh/${s.topic}/sse?since=72h`);
+          es.onmessage = (ev) => {
+            try {
+              const outer = JSON.parse(ev.data);
+              if (!outer.message) return;
+              const item = JSON.parse(outer.message);
+              if (!item || !item.id || !item.title) return;
+              const list = loadJson(s.key, []);
+              if (!list.some(x => x.id === item.id)) {
+                list.unshift(item);
+                saveJson(s.key, list.slice(0, 80));
+                renderServiceSection(s.key, s.feed, s.mode);
+              }
+            } catch {}
+          };
+        } catch {}
+      });
+    }
+
+    // التنقل بين الأقسام والفلاتر والبحث
+    function switchSection(targetId) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+
+      const sec = document.getElementById(targetId) || document.getElementById('chat');
+      sec.classList.add('active');
+      const nav = document.querySelector(`.nav-item[data-target="${targetId}"]`);
+      if (nav) nav.classList.add('active');
+      const pill = document.querySelector(`.filter-pill[data-tab-jump="${targetId}"]`);
+      if (pill) pill.classList.add('active');
+    }
+
+    document.querySelectorAll('.nav-item').forEach(btn => {
+      btn.addEventListener('click', () => switchSection(btn.dataset.target));
+    });
+    document.querySelectorAll('.filter-pill').forEach(pill => {
+      pill.addEventListener('click', () => switchSection(pill.dataset.tabJump));
+    });
+
+    document.getElementById('searchInput').addEventListener('input', () => {
+      renderThreads();
+      renderContacts();
+      renderMessages();
+      renderServiceSection(STORAGE_NEWS, 'newsFeed', 'news');
+      renderServiceSection(STORAGE_MARKET, 'marketFeed', 'market');
+      renderServiceSection(STORAGE_GUIDE, 'guideFeed', 'guide');
+    });
+
+    // نافذة تسجيل الرقم وكود التحقق
+    const authModal = document.getElementById('authModal');
+    const stepPhone = document.getElementById('stepPhone');
+    const stepCode = document.getElementById('stepCode');
+    const smsToast = document.getElementById('smsToast');
+
+    function openAuthModal() {
+      const u = getSavedUser();
+      document.getElementById('nameInput').value = u?.name || '';
+      document.getElementById('phoneInput').value = u?.phone || '';
+      document.getElementById('phoneErr').textContent = '';
+      document.getElementById('codeErr').textContent = '';
+      document.getElementById('codeInput').value = '';
+      stepPhone.style.display = 'block';
+      stepCode.style.display = 'none';
+      smsToast.classList.remove('show');
+      authModal.classList.add('open');
+    }
+
+    document.getElementById('accountBtn').addEventListener('click', openAuthModal);
+    document.getElementById('closeAuthBtn').addEventListener('click', () => authModal.classList.remove('open'));
+
+    document.getElementById('sendCodeBtn').addEventListener('click', () => {
+      const name = document.getElementById('nameInput').value.trim();
+      const phone = document.getElementById('phoneInput').value.replace(/\D/g, '');
+      const err = document.getElementById('phoneErr');
+      if (phone.length < 7) {
+        err.textContent = 'يرجى إدخال رقم جوال صحيح.';
+        return;
+      }
+      err.textContent = '';
+      pendingUser = { name: name || 'مستخدم تريم', phone };
+      generatedCode = String(Math.floor(100000 + Math.random() * 900000));
+      stepPhone.style.display = 'none';
+      stepCode.style.display = 'block';
+      document.getElementById('codeDesc').textContent = `تم إرسال رمز التحقق إلى الرقم +967${phone}`;
+      smsToast.textContent = `رسالة تحقق داخل التطبيق: رمز الدخول الخاص بك هو ${generatedCode}`;
+      smsToast.classList.add('show');
+    });
+
+    document.getElementById('backPhoneBtn').addEventListener('click', () => {
+      stepCode.style.display = 'none';
+      stepPhone.style.display = 'block';
+      document.getElementById('codeErr').textContent = '';
+    });
+
+    document.getElementById('verifyBtn').addEventListener('click', () => {
+      const entered = document.getElementById('codeInput').value.trim();
+      const err = document.getElementById('codeErr');
+      if (entered !== generatedCode) {
+        err.textContent = 'الرمز غير مطابق، أدخل الرمز الظاهر في الرسالة.';
+        return;
+      }
+      saveJson(STORAGE_USER, pendingUser);
+      authModal.classList.remove('open');
+      refreshUserUI();
+      registerPresence(pendingUser);
+      activeThread = { id: 'public', title: 'مجلس أخبار تريم العام', subtitle: 'محادثة مشتركة لكل من يفتح التطبيق' };
+      subscribeToRoom(activeThread.id);
+      renderMessages();
+    });
+
+    // تثبيت PWA
+    let deferredPrompt;
+    const installBtn = document.getElementById('installBtn');
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'inline-block';
+    });
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      installBtn.style.display = 'none';
+    });
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+
+    // التشغيل الأولي
+    seedDefaultsIfEmpty();
+    const existingUser = getSavedUser();
+    if (existingUser && existingUser.phone) {
+      registerPresence(existingUser);
+    }
+    refreshUserUI();
+    renderServiceSection(STORAGE_NEWS, 'newsFeed', 'news');
+    renderServiceSection(STORAGE_MARKET, 'marketFeed', 'market');
+    renderServiceSection(STORAGE_GUIDE, 'guideFeed', 'guide');
+    subscribeToRoom(activeThread.id);
+    subscribePresence();
+    subscribeServices();
+    renderMessages();
+
+    if (!existingUser) {
+      openAuthModal();
+    }
+  </script>
+</body>
+</html>
+
